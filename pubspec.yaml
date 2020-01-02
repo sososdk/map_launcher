@@ -1,8 +1,8 @@
 name: map_launcher
 description: Flutter plugin for launching maps
-version: 0.0.1
+version: 1.0.0
 author:
-homepage:
+homepage: https://github.com/sososdk
 
 environment:
   sdk: ">=2.1.0 <3.0.0"

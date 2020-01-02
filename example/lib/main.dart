@@ -1,43 +1,63 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:map_launcher/map_launcher.dart';
 
-void main() => runApp(MyApp());
+enum ShowType { marker, plan }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
+void main() => runApp(MapLauncherDemo());
 
-class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
+class MapLauncherDemo extends StatelessWidget {
+  void showMaker(AvailableMap map) {
+    final title = "Shanghai Tower";
+    final description = "Asia's tallest building";
+    final coords = Coords(31.233568, 121.505504);
+    map.showMarker(
+      title: title,
+      description: description,
+      coords: coords,
+    );
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await MapLauncher.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+  void showPlan(AvailableMap map) {
+    final startName = "Shanghai Tower";
+    final startCoords = Coords(31.233568, 121.505504);
+    final endName = "BeiJing";
+    final endCoords = Coords(39.908692, 116.397477);
+    map.showDirections(
+      startName: startName,
+      startCoords: startCoords,
+      endName: endName,
+      endCoords: endCoords,
+    );
+  }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
+  openMapsSheet(context, ShowType type) async {
+    final availableMaps = await MapLauncher.installedMaps;
 
-    setState(() {
-      _platformVersion = platformVersion;
-    });
+    print(availableMaps);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Container(
+              child: Wrap(
+                children: <Widget>[
+                  for (var map in availableMaps)
+                    ListTile(
+                      onTap: () => type == ShowType.plan
+                          ? showPlan(map)
+                          : showMaker(map),
+                      title: Text(map.name),
+                      leading: Icon(Icons.map),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -45,11 +65,25 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Map Launcher Demo'),
         ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
-        ),
+        body: Center(child: Builder(
+          builder: (context) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                MaterialButton(
+                  onPressed: () => openMapsSheet(context, ShowType.marker),
+                  child: Text('Show Maps'),
+                ),
+                MaterialButton(
+                  onPressed: () => openMapsSheet(context, ShowType.plan),
+                  child: Text('Show Plans'),
+                ),
+              ],
+            );
+          },
+        )),
       ),
     );
   }
